@@ -57,19 +57,27 @@ try:
             spaces='drive',
         ).execute()
 
-        # Uploading new file
-        file_metadata = {
-            'name': file,
-            'parents': [folder_id]
-        }
-        media = MediaFileUpload('data/' + file)
-        new_file = service.files().create(body=file_metadata, media_body=media, fields='id').execute()
-        print(f'Backed up file: {file}')
+        # If file does not exist, upload it
+        if not response['files']:
+            # Uploading new file
+            file_metadata = {
+                'name': file,
+                'parents': [folder_id]
+            }
+            media = MediaFileUpload('data/' + file)
+            new_file = service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+            print(f'Backed up file: {file}')
+        # If file exists, overwrite it
+        else:
+            file_id = response['files'][0]['id']
+            media = MediaFileUpload('data/' + file)
+            update_file = service.files().update(fileId=file_id, media_body=media).execute()
+            print(f'Updated file: {file}')
 
-        # Delete old file
-        if response['files']:
-            old_file_id = response['files'][0]['id']
-            service.files().delete(fileId=old_file_id).execute()
+        # # Delete old file
+        # if response['files']:
+        #     old_file_id = response['files'][0]['id']
+        #     service.files().delete(fileId=old_file_id).execute()
 
 except HttpError as e:
     print("Error: ", e)
